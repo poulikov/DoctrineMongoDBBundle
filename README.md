@@ -1,3 +1,7 @@
+# Setup#
+get John Wage's ODM library for Doctrine 2,
+get Symfony 2
+
 # Usage #
 Add the following to your yaml configuration file:
 
