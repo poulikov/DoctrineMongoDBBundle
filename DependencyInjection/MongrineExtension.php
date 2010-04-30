@@ -3,11 +3,11 @@
 namespace Bundle\MongrineBundle\DependencyInjection;
 
 use Symfony\Components\DependencyInjection\Loader\LoaderExtension,
-	Symfony\Components\DependencyInjection\Loader\XmlFileLoader,
-	Symfony\Components\DependencyInjection\BuilderConfiguration,
-	Symfony\Components\DependencyInjection\Definition,
-	Symfony\Components\DependencyInjection\Reference,
-	Bundle\ApiBundle\Helpers\EventManager;
+Symfony\Components\DependencyInjection\Loader\XmlFileLoader,
+Symfony\Components\DependencyInjection\BuilderConfiguration,
+Symfony\Components\DependencyInjection\Definition,
+Symfony\Components\DependencyInjection\Reference,
+Bundle\ApiBundle\Helpers\EventManager;
 
 /*
  * This file is part of The OpenSky Project
@@ -18,181 +18,192 @@ use Symfony\Components\DependencyInjection\Loader\LoaderExtension,
  *
  * @author Bulat Shakirzyanov <bulat@theopenskyproject.com>
  */
-class MongrineExtension extends LoaderExtension {
+class MongrineExtension extends LoaderExtension
+{
 
-	protected $_resources = array(
-		'odm' => 'odm.xml',
-	);
+  protected $_resources = array(
+    'odm' => 'odm.xml',
+  );
 
-	protected $alias;
-	protected $bundleDirs;
-	protected $bundles;
+  protected $alias;
+  protected $bundleDirs;
+  protected $bundles;
 
-	public function __construct(array $bundleDirs, array $bundles) {
-		$this->bundleDirs = $bundleDirs;
-		$this->bundles = $bundles;
-	}
+  public function __construct(array $bundleDirs, array $bundles)
+  {
+    $this->bundleDirs = $bundleDirs;
+    $this->bundles = $bundles;
+  }
 
-	public function odmLoad($config) {
-		$configuration = new BuilderConfiguration();
+  public function odmLoad($config) {
+    $configuration = new BuilderConfiguration();
 
-		$loader = new XmlFileLoader(__DIR__.'/../Resources/config');
-		$configuration->merge($loader->load($this->_resources['odm']));
+    $loader = new XmlFileLoader(__DIR__.'/../Resources/config');
+    $configuration->merge($loader->load($this->_resources['odm']));
 
-		$config['default_entity_manager'] = isset($config['default_entity_manager']) ? $config['default_entity_manager'] : 'default';
-		foreach (array('metadata_driver', 'cache_driver') as $key) {
-			if (isset($config[$key])) {
-				$configuration->setParameter('doctrine.odm.'.$key, $config[$key]);
-			}
-		}
-		$config['entity_managers'] = isset($config['entity_managers']) ?
-			$config['entity_managers'] : array($config['default_entity_manager'] => array())
-		;
-		foreach ($config['entity_managers'] as $name => $connection) {
-			$ormConfigDef = new Definition('Doctrine\ODM\MongoDB\Configuration');
-			$configuration->setDefinition(
-				sprintf('doctrine.odm.%s_configuration', $name), $ormConfigDef
-			);
+    $config['default_entity_manager'] = isset($config['default_entity_manager']) ?
+      $config['default_entity_manager'] : 'default';
+    foreach (array('metadata_driver', 'cache_driver') as $key)
+    {
+      if (isset($config[$key]))
+      {
+        $configuration->setParameter('doctrine.odm.'.$key, $config[$key]);
+      }
+    }
+    $config['entity_managers'] = isset($config['entity_managers']) ?
+      $config['entity_managers'] : array($config['default_entity_manager'] => array())
+    ;
+    foreach ($config['entity_managers'] as $name => $connection)
+    {
+      $ormConfigDef = new Definition('Doctrine\ODM\MongoDB\Configuration');
+      $configuration->setDefinition(
+        sprintf('doctrine.odm.%s_configuration', $name), $ormConfigDef
+      );
 
-			$drivers = array('metadata');
-			foreach ($drivers as $driver) {
-				$definition = $configuration->getDefinition(sprintf('doctrine.odm.cache.%s', $configuration->getParameter('doctrine.odm.cache_driver')));
-				$clone = clone $definition;
-				$clone->addMethodCall('setNamespace', array(sprintf('doctrine_%s_', $driver)));
-				$configuration->setDefinition(sprintf('doctrine.odm.%s_cache', $driver), $clone);
-			}
+      $drivers = array('metadata');
+      foreach ($drivers as $driver)
+      {
+        $definition = $configuration->getDefinition(sprintf('doctrine.odm.cache.%s', $configuration->getParameter('doctrine.odm.cache_driver')));
+        $clone = clone $definition;
+        $clone->addMethodCall('setNamespace', array(sprintf('doctrine_%s_', $driver)));
+        $configuration->setDefinition(sprintf('doctrine.odm.%s_cache', $driver), $clone);
+      }
 
-			// configure metadata driver for each bundle based on the type of mapping files found
-			$mappingDriverDef = new Definition('Doctrine\ODM\MongoDB\Mapping\Driver\DriverChain');
-			$bundleEntityMappings = array();
-			$bundleDirs = $this->bundleDirs;
-			$aliasMap = array();
-			foreach (array_reverse($this->bundles) as $className) {
-				$tmp = dirname(str_replace('\\', '/', $className));
-				$namespace = str_replace('/', '\\', dirname($tmp));
-				$class = basename($tmp);
+      // configure metadata driver for each bundle based on the type of mapping files found
+      $mappingDriverDef = new Definition('Doctrine\ODM\MongoDB\Mapping\Driver\DriverChain');
+      $bundleEntityMappings = array();
+      $bundleDirs = $this->bundleDirs;
+      $aliasMap = array();
+      foreach (array_reverse($this->bundles) as $className)
+      {
+        $tmp = dirname(str_replace('\\', '/', $className));
+        $namespace = str_replace('/', '\\', dirname($tmp));
+        $class = basename($tmp);
 
-				if (!isset($bundleDirs[$namespace])) {
-					continue;
-				}
+        if (!isset($bundleDirs[$namespace]))
+        {
+          continue;
+        }
 
-				$type = false;
-				if (is_dir($dir = $bundleDirs[$namespace].'/'.$class.'/Resources/config/doctrine/metadata')) {
-					$type = $this->detectMappingType($dir);
-				}
+        $type = false;
+        if (is_dir($dir = $bundleDirs[$namespace].'/'.$class.'/Resources/config/doctrine/metadata'))
+        {
+          $type = $this->detectMappingType($dir);
+        }
 
-				if (is_dir($dir = $bundleDirs[$namespace].'/'.$class.'/Entities')) {
-					$type = 'annotation';
+        if (is_dir($dir = $bundleDirs[$namespace].'/'.$class.'/Entities'))
+        {
+          $type = 'annotation';
 
-					$aliasMap[$class] = $namespace.'\\'.$class.'\\Entities';
-				}
+          $aliasMap[$class] = $namespace.'\\'.$class.'\\Entities';
+        }
 
-				if (false !== $type) {
-					$mappingDriverDef->addMethodCall('addDriver', array(
-						new Reference(sprintf('doctrine.odm.metadata_driver.%s', $type)),
-						$namespace.'\\'.$class.'\\Entities'
-						)
-					);
-				}
-			}
-			$configuration->setDefinition('doctrine.odm.metadata_driver', $mappingDriverDef);
+        if (false !== $type)
+        {
+          $mappingDriverDef->addMethodCall('addDriver', array(
+            new Reference(sprintf('doctrine.odm.metadata_driver.%s', $type)),
+            $namespace.'\\'.$class.'\\Entities'
+          ));
+        }
+      }
+      $configuration->setDefinition('doctrine.odm.metadata_driver', $mappingDriverDef);
 
-			$methods = array(
-				'setMetadataCacheImpl' => new Reference('doctrine.odm.metadata_cache'),
-				'setMetadataDriverImpl' => new Reference('doctrine.odm.metadata_driver'),
-			);
+      $methods = array(
+        'setMetadataCacheImpl' => new Reference('doctrine.odm.metadata_cache'),
+        'setMetadataDriverImpl' => new Reference('doctrine.odm.metadata_driver'),
+      );
 
-			foreach ($methods as $method => $arg) {
-				$ormConfigDef->addMethodCall($method, array($arg));
-			}
-			$server = isset($connection['connection']) ? (
-				isset($config['connections']) ? (
-					isset($config['connections'][$connection['connection']]) ? (
-						isset($config['connections'][$connection['connection']]['server']) ?
-							$config['connections'][$connection['connection']]['server']
-							: null
-					) : null
-				) : null
-			) : null;
+      foreach ($methods as $method => $arg)
+      {
+        $ormConfigDef->addMethodCall($method, array($arg));
+      }
+      $server = isset($connection['connection']) ?
+        (isset($config['connections']) ?
+          (isset($config['connections'][$connection['connection']]) ?
+            (isset($config['connections'][$connection['connection']]['server']) ?
+              $config['connections'][$connection['connection']]['server'] : null
+            ) : null
+          ) : null
+        ) : null;
 
-			$ormConfigDef = new Definition('Mongo', array($server));
-			$configuration->setDefinition(
-				sprintf('doctrine.odm.%s_connection', $name), $ormConfigDef
-			);
+      $ormConfigDef = new Definition('Mongo', array($server));
+      $configuration->setDefinition(
+        sprintf('doctrine.odm.%s_connection', $name), $ormConfigDef
+      );
 
-			$ormEmArgs = array(
-				new Reference(sprintf('doctrine.odm.%s_connection', $name)),
-				new Reference(sprintf('doctrine.odm.%s_configuration', $name))
-			);
-			$ormEmDef = new Definition('Doctrine\ODM\MongoDB\EntityManager', $ormEmArgs);
-			$ormEmDef->setConstructor('create');
+      $ormEmArgs = array(
+        new Reference(sprintf('doctrine.odm.%s_connection', $name)),
+        new Reference(sprintf('doctrine.odm.%s_configuration', $name))
+      );
+      $ormEmDef = new Definition('Doctrine\ODM\MongoDB\EntityManager', $ormEmArgs);
+      $ormEmDef->setConstructor('create');
 
-			$configuration->setDefinition(
-				sprintf('doctrine.odm.%s_entity_manager', $name),
-				$ormEmDef
-			);
+      $configuration->setDefinition(
+        sprintf('doctrine.odm.%s_entity_manager', $name),
+        $ormEmDef
+      );
 
-			if ($name == $config['default_entity_manager']) {
-				$configuration->setAlias(
-					'doctrine.odm.entity_manager',
-					sprintf('doctrine.odm.%s_entity_manager', $name)
-				);
-			}
-		}
+      if ($name == $config['default_entity_manager']) {
+        $configuration->setAlias(
+          'doctrine.odm.entity_manager',
+          sprintf('doctrine.odm.%s_entity_manager', $name)
+        );
+      }
+    }
 
-		$configuration->setAlias(
-			'doctrine.odm.cache',
-			sprintf(
-			'doctrine.odm.cache.%s',
-			$configuration->getParameter('doctrine.odm.cache_driver')
-			)
-		);
+    $configuration->setAlias(
+      'doctrine.odm.cache',
+      sprintf(
+      'doctrine.odm.cache.%s',
+      $configuration->getParameter('doctrine.odm.cache_driver')
+      )
+    );
 
-		return $configuration;
-	}
+    return $configuration;
+  }
 
-	/**
-	 * Detect the type of Doctrine 2 mapping files located in a given directory.
-	 * Simply finds the first file in a directory and returns the extension. If no
-	 * mapping files are found then the annotation type is returned.
-	 *
-	 * @param string $dir
-	 * @return string $type
-	 */
-	protected function detectMappingType($dir) {
-		$files = glob($dir.'/*.*');
-		if (!$files) {
-			return 'annotation';
-		}
-		$info = pathinfo($files[0]);
+  /**
+   * Detect the type of Doctrine 2 mapping files located in a given directory.
+   * Simply finds the first file in a directory and returns the extension. If no
+   * mapping files are found then the annotation type is returned.
+   *
+   * @param string $dir
+   * @return string $type
+   */
+  protected function detectMappingType($dir) {
+    $files = glob($dir.'/*.*');
+    if (!$files) {
+      return 'annotation';
+    }
+    $info = pathinfo($files[0]);
 
-		return $info['extension'];
-	}
+    return $info['extension'];
+  }
 
-	/**
-	 * Returns the namespace to be used for this extension (XML namespace).
-	 *
-	 * @return string The XML namespace
-	 */
-	public function getNamespace() {
-		return 'http://www.symfony-project.org/schema/dic/symfony';
-	}
+  /**
+   * Returns the namespace to be used for this extension (XML namespace).
+   *
+   * @return string The XML namespace
+   */
+  public function getNamespace() {
+    return 'http://www.symfony-project.org/schema/dic/symfony';
+  }
 
-	/**
-	 * @return string
-	 */
-	public function getXsdValidationBasePath() {
-		return __DIR__ . '/../Resources/config/';
-	}
+  /**
+   * @return string
+   */
+  public function getXsdValidationBasePath() {
+    return __DIR__ . '/../Resources/config/';
+  }
 
-	/**
-	 * Returns the recommended alias to use in XML.
-	 *
-	 * This alias is also the mandatory prefix to use when using YAML.
-	 *
-	 * @return string The alias
-	 */
-	public function getAlias() {
-		return 'mongrine';
-	}
+  /**
+   * Returns the recommended alias to use in XML.
+   *
+   * This alias is also the mandatory prefix to use when using YAML.
+   *
+   * @return string The alias
+   */
+  public function getAlias() {
+    return 'mongrine';
+  }
 }
