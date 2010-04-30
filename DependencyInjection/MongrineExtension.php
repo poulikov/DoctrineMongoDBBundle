@@ -41,8 +41,8 @@ class MongrineExtension extends LoaderExtension
     $loader = new XmlFileLoader(__DIR__.'/../Resources/config');
     $configuration->merge($loader->load($this->_resources['odm']));
 
-    $config['default_entity_manager'] = isset($config['default_entity_manager']) ?
-      $config['default_entity_manager'] : 'default';
+    $config['default_document_manager'] = isset($config['default_document_manager']) ?
+      $config['default_document_manager'] : 'default';
     foreach (array('metadata_driver', 'cache_driver') as $key)
     {
       if (isset($config[$key]))
@@ -50,10 +50,10 @@ class MongrineExtension extends LoaderExtension
         $configuration->setParameter('doctrine.odm.'.$key, $config[$key]);
       }
     }
-    $config['entity_managers'] = isset($config['entity_managers']) ?
-      $config['entity_managers'] : array($config['default_entity_manager'] => array())
+    $config['document_managers'] = isset($config['document_managers']) ?
+      $config['document_managers'] : array($config['default_document_manager'] => array())
     ;
-    foreach ($config['entity_managers'] as $name => $connection)
+    foreach ($config['document_managers'] as $name => $connection)
     {
       $ormConfigDef = new Definition('Doctrine\ODM\MongoDB\Configuration');
       $configuration->setDefinition(
@@ -139,14 +139,14 @@ class MongrineExtension extends LoaderExtension
       $ormEmDef->setConstructor('create');
 
       $configuration->setDefinition(
-        sprintf('doctrine.odm.%s_entity_manager', $name),
+        sprintf('doctrine.odm.%s_document_manager', $name),
         $ormEmDef
       );
 
-      if ($name == $config['default_entity_manager']) {
+      if ($name == $config['default_document_manager']) {
         $configuration->setAlias(
-          'doctrine.odm.entity_manager',
-          sprintf('doctrine.odm.%s_entity_manager', $name)
+          'doctrine.odm.document_manager',
+          sprintf('doctrine.odm.%s_document_manager', $name)
         );
       }
     }

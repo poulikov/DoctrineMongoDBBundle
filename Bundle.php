@@ -26,7 +26,7 @@ class Bundle extends BaseBundle
     ));
 
     $metadataDirs = array();
-    $entityDirs = array();
+    $documentDirs = array();
     $bundleDirs = $container->getParameter('kernel.bundle_dirs');
     foreach ($container->getParameter('kernel.bundles') as $className)
     {
@@ -42,11 +42,11 @@ class Bundle extends BaseBundle
         }
         if (is_dir($dir = $bundleDirs[$namespace].'/'.$class.'/Entities'))
         {
-          $entityDirs[] = realpath($dir);
+          $documentDirs[] = realpath($dir);
         }
       }
     }
     $container->setParameter('doctrine.odm.metadata_driver.mapping_dirs', $metadataDirs);
-    $container->setParameter('doctrine.odm.entity_dirs', $entityDirs);
+    $container->setParameter('doctrine.odm.document_dirs', $documentDirs);
   }
 }
