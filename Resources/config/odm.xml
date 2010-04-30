@@ -16,7 +16,7 @@
     <!--- Annotation Metadata Driver Service -->
     <service id="doctrine.odm.metadata_driver.annotation" class="Doctrine\ODM\MongoDB\Mapping\Driver\AnnotationDriver">
       <argument type="service" id="doctrine.odm.metadata_driver.annotation.reader" />
-      <argument>%doctrine.odm.entity_dirs%</argument>
+      <argument>%doctrine.odm.document_dirs%</argument>
     </service>
 
     <service id="doctrine.odm.metadata_driver.annotation.reader" class="Doctrine\Common\Annotations\AnnotationReader">

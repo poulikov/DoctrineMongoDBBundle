@@ -126,7 +126,11 @@ class MongrineExtension extends LoaderExtension
           ) : null
         ) : null;
 
-      $ormConfigDef = new Definition('Mongo', array($server));
+      if(null !== $server) {
+        $ormConfigDef = new Definition('Doctrine\ODM\MongoDB\Mongo', array($server));
+      } else {
+        $ormConfigDef = new Definition('Doctrine\ODM\MongoDB\Mongo');
+      }
       $configuration->setDefinition(
         sprintf('doctrine.odm.%s_connection', $name), $ormConfigDef
       );
@@ -135,7 +139,7 @@ class MongrineExtension extends LoaderExtension
         new Reference(sprintf('doctrine.odm.%s_connection', $name)),
         new Reference(sprintf('doctrine.odm.%s_configuration', $name))
       );
-      $ormEmDef = new Definition('Doctrine\ODM\MongoDB\EntityManager', $ormEmArgs);
+      $ormEmDef = new Definition('Doctrine\ODM\MongoDB\DocumentManager', $ormEmArgs);
       $ormEmDef->setConstructor('create');
 
       $configuration->setDefinition(
