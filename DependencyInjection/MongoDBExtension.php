@@ -1,6 +1,6 @@
 <?php
 
-namespace Bundle\MongrineBundle\DependencyInjection;
+namespace Bundle\DoctrineMongoDBBundle\DependencyInjection;
 
 use Symfony\Components\DependencyInjection\Loader\LoaderExtension,
 Symfony\Components\DependencyInjection\Loader\XmlFileLoader,
@@ -18,7 +18,7 @@ Bundle\ApiBundle\Helpers\EventManager;
  *
  * @author Bulat Shakirzyanov <bulat@theopenskyproject.com>
  */
-class MongrineExtension extends LoaderExtension
+class MongoDBExtension extends LoaderExtension
 {
 
   protected $_resources = array(

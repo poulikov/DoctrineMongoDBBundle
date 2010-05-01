@@ -1,11 +1,11 @@
 <?php
 
-namespace Bundle\MongrineBundle;
+namespace Bundle\DoctrineMongoDBBundle;
 
 use Symfony\Foundation\Bundle\Bundle as BaseBundle,
 Symfony\Components\DependencyInjection\ContainerInterface,
 Symfony\Components\DependencyInjection\Loader\Loader,
-Bundle\MongrineBundle\DependencyInjection\MongrineExtension;
+Bundle\DoctrineMongoDBBundle\DependencyInjection\MongoDBExtension;
 
 /* 
  * This file is part of The OpenSky Project
@@ -20,7 +20,7 @@ class Bundle extends BaseBundle
 {
   public function buildContainer(ContainerInterface $container)
   {
-    Loader::registerExtension(new MongrineExtension(
+    Loader::registerExtension(new MongoDBExtension(
       $container->getParameter('kernel.bundle_dirs'),
       $container->getParameter('kernel.bundles')
     ));
