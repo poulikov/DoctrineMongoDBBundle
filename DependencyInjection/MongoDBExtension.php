@@ -111,6 +111,8 @@ class MongoDBExtension extends LoaderExtension
       $methods = array(
         'setMetadataCacheImpl' => new Reference('doctrine.odm.metadata_cache'),
         'setMetadataDriverImpl' => new Reference('doctrine.odm.metadata_driver'),
+        'setProxyDir' => '%kernel.cache_dir%/doctrine/Proxies',
+        'setProxyNamespace' => 'Proxies',
       );
 
       foreach ($methods as $method => $arg)
