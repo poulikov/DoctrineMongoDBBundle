@@ -91,18 +91,18 @@ class MongoDBExtension extends LoaderExtension
           $type = $this->detectMappingType($dir);
         }
 
-        if (is_dir($dir = $bundleDirs[$namespace].'/'.$class.'/Entities'))
+        if (is_dir($dir = $bundleDirs[$namespace].'/'.$class.'/Documents'))
         {
           $type = 'annotation';
 
-          $aliasMap[$class] = $namespace.'\\'.$class.'\\Entities';
+          $aliasMap[$class] = $namespace.'\\'.$class.'\\Documents';
         }
 
         if (false !== $type)
         {
           $mappingDriverDef->addMethodCall('addDriver', array(
             new Reference(sprintf('doctrine.odm.metadata_driver.%s', $type)),
-            $namespace.'\\'.$class.'\\Entities'
+            $namespace.'\\'.$class.'\\Documents'
           ));
         }
       }
@@ -210,6 +210,6 @@ class MongoDBExtension extends LoaderExtension
    * @return string The alias
    */
   public function getAlias() {
-    return 'mongrine';
+    return 'mongodb';
   }
 }
