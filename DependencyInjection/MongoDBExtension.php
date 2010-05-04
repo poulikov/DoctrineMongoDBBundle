@@ -212,6 +212,6 @@ class MongoDBExtension extends LoaderExtension
    * @return string The alias
    */
   public function getAlias() {
-    return 'mongrine';
+    return 'mongodb';
   }
 }
