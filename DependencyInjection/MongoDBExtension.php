@@ -14,7 +14,7 @@ Bundle\ApiBundle\Helpers\EventManager;
 */
 
 /**
- * Description of MongrineExtension
+ * Description of MongoDBExtension
  *
  * @author Bulat Shakirzyanov <bulat@theopenskyproject.com>
  */
