@@ -21,7 +21,7 @@
 
     <service id="doctrine.odm.metadata_driver.annotation.reader" class="Doctrine\Common\Annotations\AnnotationReader">
       <argument type="service" id="doctrine.odm.cache" />
-      <call method="setDefaultAnnotationNamespace"><argument>Doctrine\ODM\MongoDB\Mapping\Driver\</argument></call>
+      <call method="setDefaultAnnotationNamespace"><argument>Doctrine\ODM\MongoDB\Mapping\</argument></call>
     </service>
 
     <!--- XML Metadata Driver Service -->
