@@ -13,4 +13,4 @@ Add the following to your yaml configuration file:
 		  connection:      mongodb
 	  connections:
 		mongodb:
-		  server:        mongo://localhost/somedatabase
+		  server:        localhost/somedatabase
