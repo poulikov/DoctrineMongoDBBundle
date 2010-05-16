@@ -5,7 +5,7 @@ get Symfony 2
 # Usage #
 Add the following to your yaml configuration file:
 
-	mongrine.odm:
+	mongodb.odm:
 	  default_document_manager: default
 	  cache_driver:            array
 	  document_managers:
