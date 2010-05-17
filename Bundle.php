@@ -18,35 +18,35 @@ Bundle\DoctrineMongoDBBundle\DependencyInjection\MongoDBExtension;
  */
 class Bundle extends BaseBundle
 {
-  public function buildContainer(ContainerInterface $container)
-  {
-    Loader::registerExtension(new MongoDBExtension(
-      $container->getParameter('kernel.bundle_dirs'),
-      $container->getParameter('kernel.bundles')
-    ));
-
-    $metadataDirs = array();
-    $documentDirs = array();
-    $bundleDirs = $container->getParameter('kernel.bundle_dirs');
-    foreach ($container->getParameter('kernel.bundles') as $className)
+    public function buildContainer(ContainerInterface $container)
     {
-      $tmp = dirname(str_replace('\\', '/', $className));
-      $namespace = str_replace('/', '\\', dirname($tmp));
-      $class = basename($tmp);
+        Loader::registerExtension(new MongoDBExtension(
+            $container->getParameter('kernel.bundle_dirs'),
+            $container->getParameter('kernel.bundles')
+        ));
 
-      if (isset($bundleDirs[$namespace]))
-      {
-        if (is_dir($dir = $bundleDirs[$namespace].'/'.$class.'/Resources/config/doctrine/metadata'))
+        $metadataDirs = array();
+        $documentDirs = array();
+        $bundleDirs = $container->getParameter('kernel.bundle_dirs');
+        foreach ($container->getParameter('kernel.bundles') as $className)
         {
-          $metadataDirs[] = realpath($dir);
+            $tmp = dirname(str_replace('\\', '/', $className));
+            $namespace = str_replace('/', '\\', dirname($tmp));
+            $class = basename($tmp);
+
+            if (isset($bundleDirs[$namespace]))
+            {
+                if (is_dir($dir = $bundleDirs[$namespace].'/'.$class.'/Resources/config/doctrine/metadata'))
+                {
+                    $metadataDirs[] = realpath($dir);
+                }
+                if (is_dir($dir = $bundleDirs[$namespace].'/'.$class))
+                {
+                    $documentDirs[] = realpath($dir);
+                }
+            }
         }
-        if (is_dir($dir = $bundleDirs[$namespace].'/'.$class))
-        {
-          $documentDirs[] = realpath($dir);
-        }
-      }
+        $container->setParameter('doctrine.odm.metadata_driver.mapping_dirs', $metadataDirs);
+        $container->setParameter('doctrine.odm.document_dirs', $documentDirs);
     }
-    $container->setParameter('doctrine.odm.metadata_driver.mapping_dirs', $metadataDirs);
-    $container->setParameter('doctrine.odm.document_dirs', $documentDirs);
-  }
 }
