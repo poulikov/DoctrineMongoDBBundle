@@ -102,7 +102,7 @@ class MongoDBExtension extends LoaderExtension
         {
           $mappingDriverDef->addMethodCall('addDriver', array(
             new Reference(sprintf('doctrine.odm.metadata_driver.%s', $type)),
-            $namespace.'\\'.$class.'\\Documents'
+            $namespace.'\\'.$class
           ));
         }
       }
