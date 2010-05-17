@@ -9,17 +9,12 @@ Symfony\Components\DependencyInjection\Definition,
 Symfony\Components\DependencyInjection\Reference,
 Bundle\ApiBundle\Helpers\EventManager;
 
-/*
- * This file is part of The OpenSky Project
-*/
-
 /**
  * Description of MongoDBExtension
  *
  * @author Bulat Shakirzyanov <bulat@theopenskyproject.com>
  */
-class MongoDBExtension extends LoaderExtension
-{
+class MongoDBExtension extends LoaderExtension {
 
     protected $_resources = array(
         'odm' => 'odm.xml',
@@ -29,8 +24,7 @@ class MongoDBExtension extends LoaderExtension
     protected $bundleDirs;
     protected $bundles;
 
-    public function __construct(array $bundleDirs, array $bundles)
-    {
+    public function __construct(array $bundleDirs, array $bundles) {
         $this->bundleDirs = $bundleDirs;
         $this->bundles = $bundles;
     }

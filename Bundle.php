@@ -7,19 +7,13 @@ Symfony\Components\DependencyInjection\ContainerInterface,
 Symfony\Components\DependencyInjection\Loader\Loader,
 Bundle\DoctrineMongoDBBundle\DependencyInjection\MongoDBExtension;
 
-/* 
- * This file is part of The OpenSky Project
-*/
-
 /**
  * Description of Bundle
  *
  * @author Bulat Shakirzyanov <bulat@theopenskyproject.com>
  */
-class Bundle extends BaseBundle
-{
-    public function buildContainer(ContainerInterface $container)
-    {
+class Bundle extends BaseBundle {
+    public function buildContainer(ContainerInterface $container)     {
         Loader::registerExtension(new MongoDBExtension(
             $container->getParameter('kernel.bundle_dirs'),
             $container->getParameter('kernel.bundles')
