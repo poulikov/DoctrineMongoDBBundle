@@ -40,7 +40,7 @@ class Bundle extends BaseBundle
         {
           $metadataDirs[] = realpath($dir);
         }
-        if (is_dir($dir = $bundleDirs[$namespace].'/'.$class.'/Documents'))
+        if (is_dir($dir = $bundleDirs[$namespace].'/'.$class))
         {
           $documentDirs[] = realpath($dir);
         }
