@@ -11,7 +11,7 @@
     <parameter key="doctrine.odm.cache.memcache_class">Doctrine\Common\Cache\MemcacheCache</parameter>
     <parameter key="doctrine.odm.cache.memcache.host">localhost</parameter>
     <parameter key="doctrine.odm.cache.memcache.port">11211</parameter>
-    <parameter key="doctrine.odm.cache.memcache.instance_class">Memcahe</parameter>
+    <parameter key="doctrine.odm.cache.memcache.instance_class">Memcache</parameter>
     <parameter key="doctrine.odm.cache.xcache_class">Doctrine\Common\Cache\XcacheCache</parameter>
 
     <!-- metadata -->
@@ -35,7 +35,6 @@
   </parameters>
 
   <services>
-    <!--- Should we just move all this to php code? is it best to go one way or the other? -->
 
     <!-- Chain Metadata Driver Service -->
     <service id="doctrine.odm.mongo.metadata_driver.chain" class="%doctrine.odm.mongo.metadata_driver.chain_class%" />
@@ -64,18 +63,18 @@
     <!-- Default metadata driver -->
     <service id="doctrine.odm.mongo.metadata_driver" alias="doctrine.odm.mongo.metadata_driver.annotation" />
 
-    <!--- ORM Array Cache Driver Service -->
+    <!--- ODM Array Cache Driver Service -->
     <service id="doctrine.odm.cache.array" class="%doctrine.odm.cache.array_class%" />
 
-    <!--- ORM APC Cache Driver Service -->
+    <!--- ODM APC Cache Driver Service -->
     <service id="doctrine.odm.cache.apc" class="%doctrine.odm.cache.apc_class%" />
 
-    <!--- ORM Memcache Cache Driver Service -->
+    <!--- ODM Memcache Cache Driver Service -->
     <service id="doctrine.odm.cache.memcache" class="%doctrine.odm.cache.memcache_class%">
       <call method="setMemcache"><argument type="service" id="doctrine.odm.cache.memcache.instance" /></call>
     </service>
 
-    <!--- ORM Memcache Cache Driver Memcache instance. See doctrine.odm.cache.memcache -->
+    <!--- ODM Memcache Cache Driver Memcache instance. See doctrine.odm.cache.memcache -->
     <service id="doctrine.odm.cache.memcache.instance" class="%doctrine.odm.cache.memcache.instance_class%">
       <call method="connect">
         <argument>%doctrine.odm.cache.memcache.host%</argument>

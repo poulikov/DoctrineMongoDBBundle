@@ -55,7 +55,8 @@ class MongoDBExtension extends LoaderExtension
             );
         }
 
-        $config['metadata_driver'] = isset($config['metadata_driver']) ?: 'auto';
+        $config['metadata_driver'] = isset($config['metadata_driver']) ?
+            $config['metadata_driver'] : 'auto';
         if ('auto' == $config['metadata_driver'])
         {
             $configuration->setAlias(
@@ -138,7 +139,7 @@ class MongoDBExtension extends LoaderExtension
             }
             else
             {
-                $conn = $defaultConnection;
+                $conn = $defaultConnectionParams;
             }
             $connections[$name] = $conn;
         }
