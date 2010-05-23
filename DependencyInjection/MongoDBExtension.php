@@ -14,157 +14,215 @@ Bundle\ApiBundle\Helpers\EventManager;
  *
  * @author Bulat Shakirzyanov <bulat@theopenskyproject.com>
  */
-class MongoDBExtension extends LoaderExtension {
+class MongoDBExtension extends LoaderExtension 
+{
 
     protected $_resources = array(
         'odm' => 'odm.xml',
     );
 
-    protected $alias;
     protected $bundleDirs;
     protected $bundles;
+    protected $appName;
+    protected $tmpDir;
 
-    public function __construct(array $bundleDirs, array $bundles) {
+    public function __construct(array $bundleDirs, array $bundles, $appName = null, $tmpDir = null) 
+    {
         $this->bundleDirs = $bundleDirs;
-        $this->bundles = $bundles;
+        $this->bundles    = $bundles;
+        $this->appName    = $appName;
+        $this->tmpDir     = $tmpDir;
     }
 
-    public function odmLoad($config) {
+    public function odmLoad($config) 
+    {
         $configuration = new BuilderConfiguration();
 
         $loader = new XmlFileLoader(__DIR__.'/../Resources/config');
         $configuration->merge($loader->load($this->_resources['odm']));
 
-        $config['default_document_manager'] = isset($config['default_document_manager']) ?
-            $config['default_document_manager'] : 'default';
-        foreach (array('metadata_driver', 'cache_driver') as $key)
+        $configuration->setParameter('doctrine.odm.mongo.default_database', $this->appName);
+        $configuration->setParameter(
+            'doctrine.odm.mongo.proxy_dir', 
+            sprintf('%s/Proxies', $this->tmpDir)
+        );
+
+        if (isset($config['cache_driver']))
         {
-            if (isset($config[$key]))
-            {
-                $configuration->setParameter('doctrine.odm.'.$key, $config[$key]);
-            }
-        }
-        $config['document_managers'] = isset($config['document_managers']) ?
-            $config['document_managers'] : array($config['default_document_manager'] => array())
-        ;
-        foreach ($config['document_managers'] as $name => $connection)
-        {
-            $ormConfigDef = new Definition('Doctrine\ODM\MongoDB\Configuration');
-            $configuration->setDefinition(
-                sprintf('doctrine.odm.%s_configuration', $name), $ormConfigDef
+            $configuration->setAlias(
+                'doctrine.odm.cache',
+                sprintf('doctrine.odm.cache.%s', $config['cache_driver'])
             );
-            $server = isset($connection['connection']) ?
-                (isset($config['connections']) ?
-                    (isset($config['connections'][$connection['connection']]) ?
-                        (isset($config['connections'][$connection['connection']]['server']) ?
-                            $config['connections'][$connection['connection']]['server'] : 'localhost'
-                        ) : 'localhost'
-                    ) : 'localhost'
-                ) : 'localhost';
-
-        $pieces = explode('/', $server);
-        $db = isset ($pieces[1]) ? $pieces[1] : null;
-
-        if (isset ($db)) {
-            $ormConfigDef->addMethodCall('setDefaultDB', array($db));
         }
 
-            $drivers = array('metadata');
-            foreach ($drivers as $driver)
-            {
-                $definition = $configuration->getDefinition(sprintf('doctrine.odm.cache.%s', $configuration->getParameter('doctrine.odm.cache_driver')));
-                $clone = clone $definition;
-                $clone->addMethodCall('setNamespace', array(sprintf('doctrine_%s_', $driver)));
-                $configuration->setDefinition(sprintf('doctrine.odm.%s_cache', $driver), $clone);
-            }
-
-            // configure metadata driver for each bundle based on the type of mapping files found
-            $mappingDriverDef = new Definition('Doctrine\ODM\MongoDB\Mapping\Driver\DriverChain');
-            $bundleEntityMappings = array();
-            $bundleDirs = $this->bundleDirs;
-            $aliasMap = array();
+        $config['metadata_driver'] = isset($config['metadata_driver']) ?: 'auto';
+        if ('auto' == $config['metadata_driver'])
+        {
+            $configuration->setAlias(
+                'doctrine.odm.mongo.metadata_driver',
+                'doctrine.odm.mongo.metadata_driver.chain'
+            );
+            $driverChainDef = $configuration->getDefinition(
+                'doctrine.odm.mongo.metadata_driver.chain'
+            );
             foreach (array_reverse($this->bundles) as $className)
             {
                 $tmp = dirname(str_replace('\\', '/', $className));
                 $namespace = str_replace('/', '\\', dirname($tmp));
                 $class = basename($tmp);
 
-                if (!isset($bundleDirs[$namespace]))
+                if (!isset($this->bundleDirs[$namespace]))
                 {
                     continue;
                 }
 
                 $type = false;
-                if (is_dir($dir = $bundleDirs[$namespace].'/'.$class.'/Resources/config/doctrine/metadata'))
+
+                if (is_dir($dir = $this->bundleDirs[$namespace].'/'.$class.'/Resources/config/doctrine/metadata'))
                 {
                     $type = $this->detectMappingType($dir);
                 }
 
-                if (is_dir($dir = $bundleDirs[$namespace].'/'.$class.'/Documents'))
+                if (is_dir($dir = $this->bundleDirs[$namespace].'/'.$class.'/Documents'))
                 {
                     $type = 'annotation';
-
-                    $aliasMap[$class] = $namespace.'\\'.$class.'\\Documents';
                 }
 
                 if (false !== $type)
                 {
-                    $mappingDriverDef->addMethodCall('addDriver', array(
-                        new Reference(sprintf('doctrine.odm.metadata_driver.%s', $type)),
-                        $namespace.'\\'.$class
-                    ));
+                    $driverChainDef->addMethodCall(
+                        'addDriver',
+                        array(
+                            new Reference(
+                                sprintf('doctrine.odm.mongo.metadata_driver.%s', $type)
+                            ),
+                            $namespace.'\\'.$class
+                        )
+                    );
                 }
             }
-            $configuration->setDefinition('doctrine.odm.metadata_driver', $mappingDriverDef);
-
-            $methods = array(
-                'setMetadataCacheImpl' => new Reference('doctrine.odm.metadata_cache'),
-                'setMetadataDriverImpl' => new Reference('doctrine.odm.metadata_driver'),
-                'setProxyDir' => '%kernel.cache_dir%/doctrine/Proxies',
-                'setProxyNamespace' => 'Proxies',
+        }
+        else
+        {
+            $configuration->setAlias(
+                'doctrine.odm.mongo.metadata_driver',
+                sprintf(
+                    'doctrine.odm.mongo.metadata_driver.%s',
+                    $config['metadata_driver']
+                )
             );
-
-            foreach ($methods as $method => $arg)
-            {
-                $ormConfigDef->addMethodCall($method, array($arg));
-            }
-
-            if(null !== $server) {
-                $ormConfigDef = new Definition('Doctrine\ODM\MongoDB\Mongo', array($server));
-            } else {
-                $ormConfigDef = new Definition('Doctrine\ODM\MongoDB\Mongo');
-            }
-            $configuration->setDefinition(
-                sprintf('doctrine.odm.%s_connection', $name), $ormConfigDef
-            );
-
-            $ormEmArgs = array(
-                new Reference(sprintf('doctrine.odm.%s_connection', $name)),
-                new Reference(sprintf('doctrine.odm.%s_configuration', $name))
-            );
-            $ormEmDef = new Definition('Doctrine\ODM\MongoDB\DocumentManager', $ormEmArgs);
-            $ormEmDef->setConstructor('create');
-
-            $configuration->setDefinition(
-                sprintf('doctrine.odm.%s_document_manager', $name),
-                $ormEmDef
-            );
-
-            if ($name == $config['default_document_manager']) {
-                $configuration->setAlias(
-                    'doctrine.odm.document_manager',
-                    sprintf('doctrine.odm.%s_document_manager', $name)
-                );
-            }
         }
 
-        $configuration->setAlias(
-            'doctrine.odm.cache',
-            sprintf(
-            'doctrine.odm.cache.%s',
-            $configuration->getParameter('doctrine.odm.cache_driver')
-            )
+        $config['default_document_manager'] = isset($config['default_document_manager']) ?
+            $config['default_document_manager'] : 'default';
+
+        $config['document_managers'] = isset($config['document_managers']) ?
+            $config['document_managers'] : array($config['default_document_manager'] => array())
+        ;
+        $defaultManagerParams = array(
+            'connection' => 'default',
         );
+        $defaultConnectionParams = array(
+            'server'  => sprintf('localhost:27017/%s', $this->appName),
+            'options' => array('connect' => true)
+        );
+        $documentManagers = array();
+        $connections = array();
+        foreach ($config['document_managers'] as $name => $params)
+        {
+            $managerParams = array_merge($defaultManagerParams, $params);
+            $documentManagers[$name] = $managerParams;
+            if (isset($config['connections']) && isset($config['connections'][$name]))
+            {
+                $conn = array_merge($defaultConnectionParams, $config['connections'][$name]);
+            }
+            else
+            {
+                $conn = $defaultConnection;
+            }
+            $connections[$name] = $conn;
+        }
+
+        $defaultConfDef    = $configuration->getDefinition('doctrine.odm.mongo.configuration');
+        $defaultConnection = $configuration->getDefinition('doctrine.odm.mongo.connection');
+        $defaultDocManager = $configuration->getDefinition('doctrine.odm.document_manager');
+
+        if (count($documentManagers) > 1)
+        {
+            foreach ($documentManagers as $name => $connection)
+            {
+                $server = $connections[$connection['connection']]['server'];
+                $options = $connections[$connection['connection']]['options'];
+
+                $pieces = explode('/', $server);
+                $db = isset ($pieces[1]) ? $pieces[1] : null;
+
+                $odmConfiguration = clone $defaultConfDef;
+                $odmConfiguration->setClass(
+                    $configuration->getParameter('doctrine.odm.mongo.configuration_class')
+                );
+                if (isset ($db)) {
+                    $odmConfiguration->addMethodCall('setDefaultDB', array($db));
+                }
+
+                $odmConnection = clone $defaultConnection;
+                $odmConnection->setClass(
+                    $configuration->getParameter('doctrine.odm.mongo_class')
+                );
+                $odmConnection->setArguments(array($server, $options));
+
+                $configuration->setDefinition(
+                    sprintf('doctrine.odm.mongo.%s_connection', $name),
+                    $odmConnection
+                );
+
+                $configuration->setDefinition(
+                    sprintf('doctrine.odm.mongo.%s_configuration', $name),
+                    $odmConfiguration
+                );
+
+                $documentManager = clone $defaultDocManager;
+                $documentManager->setClass(
+                    $configuration->getParameter('doctrine.odm.mongo.document_manager_class')
+                );
+                $odmManagerArgs = array(
+                    new Reference(sprintf('doctrine.odm.mongo.%s_connection', $name)),
+                    new Reference(sprintf('doctrine.odm.mongo.%s_configuration', $name))
+                );
+                $documentManager->setArguments($odmManagerArgs);
+
+                $configuration->setDefinition(
+                    sprintf('doctrine.odm.%s_document_manager', $name),
+                    $documentManager
+                );
+
+                if ($name == $config['default_document_manager']) {
+                    $configuration->setAlias(
+                        'doctrine.odm.document_manager',
+                        sprintf('doctrine.odm.%s_document_manager', $name)
+                    );
+                }
+            }
+        }
+        else
+        {
+            list($name, $connection) = each($documentManagers);
+            $server  = $connections[$connection['connection']]['server'];
+            $options = $connections[$connection['connection']]['options'];
+
+            $pieces = explode('/', $server);
+            $db = isset ($pieces[1]) ? $pieces[1] : null;
+
+            $configuration->setParameter('doctrine.odm.mongo.default_database', $db);
+            $configuration->setParameter('doctrine.odm.mongo.default_server', $server);
+            $configuration->setParameter(
+                'doctrine.odm.mongo.default_connection_options', $options
+            );
+            $configuration->setAlias(
+                sprintf('doctrine.odm.%s_document_manager', $name),
+                'doctrine.odm.document_manager'
+            );
+        }
 
         return $configuration;
     }

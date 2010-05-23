@@ -12,21 +12,27 @@ Bundle\DoctrineMongoDBBundle\DependencyInjection\MongoDBExtension;
  *
  * @author Bulat Shakirzyanov <bulat@theopenskyproject.com>
  */
-class Bundle extends BaseBundle {
-    public function buildContainer(ContainerInterface $container)     {
-        Loader::registerExtension(new MongoDBExtension(
-            $container->getParameter('kernel.bundle_dirs'),
-            $container->getParameter('kernel.bundles')
-        ));
+class Bundle extends BaseBundle 
+{
+    public function buildContainer(ContainerInterface $container) 
+    {
+        $kernelBundleDirs = $container->getParameter('kernel.bundle_dirs');
+        $kernelBundles    = $container->getParameter('kernel.bundles');
+        $appName          = $container->getParameter('kernel.name');
+        $cacheDir         = $container->getParameter('kernel.cache_dir');
+
+        Loader::registerExtension(
+            new MongoDBExtension($kernelBundleDirs, $kernelBundles, $appName, $cacheDir)
+        );
 
         $metadataDirs = array();
         $documentDirs = array();
-        $bundleDirs = $container->getParameter('kernel.bundle_dirs');
-        foreach ($container->getParameter('kernel.bundles') as $className)
+        $bundleDirs   = $kernelBundleDirs;
+        foreach ($kernelBundles as $className)
         {
-            $tmp = dirname(str_replace('\\', '/', $className));
+            $tmp       = dirname(str_replace('\\', '/', $className));
             $namespace = str_replace('/', '\\', dirname($tmp));
-            $class = basename($tmp);
+            $class     = basename($tmp);
 
             if (isset($bundleDirs[$namespace]))
             {
