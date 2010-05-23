@@ -14,7 +14,7 @@ Bundle\ApiBundle\Helpers\EventManager;
  *
  * @author Bulat Shakirzyanov <bulat@theopenskyproject.com>
  */
-class MongoDBExtension extends LoaderExtension 
+class MongoDBExtension extends LoaderExtension
 {
 
     protected $_resources = array(
@@ -26,7 +26,7 @@ class MongoDBExtension extends LoaderExtension
     protected $appName;
     protected $tmpDir;
 
-    public function __construct(array $bundleDirs, array $bundles, $appName = null, $tmpDir = null) 
+    public function __construct(array $bundleDirs, array $bundles, $appName = null, $tmpDir = null)
     {
         $this->bundleDirs = $bundleDirs;
         $this->bundles    = $bundles;
@@ -34,7 +34,7 @@ class MongoDBExtension extends LoaderExtension
         $this->tmpDir     = $tmpDir;
     }
 
-    public function odmLoad($config) 
+    public function odmLoad($config)
     {
         $configuration = new BuilderConfiguration();
 
@@ -43,7 +43,7 @@ class MongoDBExtension extends LoaderExtension
 
         $configuration->setParameter('doctrine.odm.mongo.default_database', $this->appName);
         $configuration->setParameter(
-            'doctrine.odm.mongo.proxy_dir', 
+            'doctrine.odm.mongo.proxy_dir',
             sprintf('%s/Proxies', $this->tmpDir)
         );
 
@@ -133,15 +133,16 @@ class MongoDBExtension extends LoaderExtension
         {
             $managerParams = array_merge($defaultManagerParams, $params);
             $documentManagers[$name] = $managerParams;
-            if (isset($config['connections']) && isset($config['connections'][$name]))
+            $connectionName = $managerParams['connection'];
+            if (isset($config['connections']) && isset($config['connections'][$connectionName]))
             {
-                $conn = array_merge($defaultConnectionParams, $config['connections'][$name]);
+                $conn = array_merge($defaultConnectionParams, $config['connections'][$connectionName]);
             }
             else
             {
                 $conn = $defaultConnectionParams;
             }
-            $connections[$name] = $conn;
+            $connections[$connectionName] = $conn;
         }
 
         $defaultConfDef    = $configuration->getDefinition('doctrine.odm.mongo.configuration');
