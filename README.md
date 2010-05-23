@@ -48,6 +48,6 @@ After you have DocumentManager instance, you can use it:
 
     $user = $dm->find('Documents\User', array('name' => 'Bulat S.'));
 
-Full MongoDB ODM documentation [is available at doctrine website](http://www.doctrine-project.org/projects/mongodb_odm/1.0/docs/en)
+Full MongoDB ODM [documentation is available at doctrine website](http://www.doctrine-project.org/projects/mongodb_odm/1.0/docs/en)
 
 Happy Coding!
