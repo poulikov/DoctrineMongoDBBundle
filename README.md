@@ -43,6 +43,33 @@ Add the following to your yaml configuration file:
 Now in your controller do:
 
     $dm = $this->container->getService('doctrine.odm.document_manager');
+    //or...
+    $dm = $this->container->getService('doctrine.odm.default_document_manager');
+
+You could specify multiple document managers:
+
+    mongodb.odm:
+      default_document_manager: default
+      cache_driver:            array
+      document_managers:
+        default:
+          connection:      mongodb
+        additional:
+          connection:      other_mongo
+      connections:
+        mongodb:
+          server:        localhost/somedatabase
+        other_mogno:
+          server:        192.168.0.18/other_database
+
+Now you can get either document manager:
+
+    $defaultDm = $this->container->getService('doctrine.odm.default_document_manager');
+    $additionalDm = $this->container->getService('doctrine.odm.additional_document_manager');
+
+Or you could just use default connection params and one document manager:
+
+    mongodb.odm: ~
 
 After you have DocumentManager instance, you can use it:
 
