@@ -1,6 +1,6 @@
 <?php
 
-namespace Bundle\DoctrineMongoDBBundle;
+namespace Bundle\DoctrineMongoDBBundle\Controller;
 
 use Symfony\Framework\WebBundle\Controller;
 
