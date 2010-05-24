@@ -18,8 +18,12 @@ class DoctrineController extends Controller
      *
      * @return object
      */
-    public function getDocumentManager()
+    public function getDocumentManager($name = null)
     {
+        if ($name) {
+            return $this->container->getService(sprintf('doctrine.odm.%s_document_manager', $name));
+        }
+
         return $this->container->getDoctrine_ODM_DocumentManagerService();
     }
 }
