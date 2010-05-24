@@ -11,7 +11,7 @@ use Symfony\Framework\WebBundle\Controller;
  * @subpackage Bundle_DoctrineMongoDDBundle
  * @author Henrik Bjornskov <henrik@bearwoods.dk>
  */
-class DoctrineController extends Controller
+class DoctrineMongoDBController extends Controller
 {
     /**
      * Returns the Doctrine ODM DocumentManager
